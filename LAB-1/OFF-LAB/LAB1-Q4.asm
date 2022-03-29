@@ -1,0 +1,90 @@
+ORG 0000h
+
+MOV R2, #1H;the inputs of the timer are arranged by giving input to R2,R1,R0 registers
+MOV R1, #1H; R2 R1 R0 represents the remaining time where R0 is the decimal
+MOV R0, #1H;
+MOV A, R0
+MOV DPTR,#ARRAY
+SJMP BACK0
+BACK2:
+MOV A,R2
+DEC A
+MOV R2,A
+MOV A,#09H
+MOV R1,A
+SJMP BACK0
+
+BACK1:
+MOV A,R1
+DEC A
+MOV R1,A
+MOV A, #09H
+
+BACK0:
+MOV R0,A
+PUSH ACC
+MOVC A,@A+DPTR
+MOV P0,A
+POP ACC
+
+PUSH ACC
+MOV A, R1
+MOVC A,@A+DPTR
+MOV P1,A
+POP ACC
+
+PUSH ACC
+MOV A, R2
+MOVC A,@A+DPTR
+MOV P2,A
+POP ACC
+
+ACALL DELAY; 0.1m=6s delay
+DEC A
+CJNE R0,#00h,BACK0
+CLR A
+
+CJNE R1,#00H, BACK1
+CJNE R2, #00H, BACK2
+MOV A, #0H
+SJMP BLINK
+
+
+MOV R0, #09H; 
+
+CJNE R1,#00H, BACK1
+CLR A
+MOV R1, #09H
+
+CONT: CJNE R2, #01H, BACK2
+MOV A,#09H
+MOV R2,#00H
+
+BLINK: 
+MOV A,#0h
+PUSH ACC
+MOV P0, A
+MOV P1, A
+MOV P2, A
+POP ACC
+ACALL DELAY; 0.1m= 6s delay between blinks
+MOV A, #0ffh
+PUSH ACC
+MOV P0, A
+MOV P1, A
+MOV P2, A
+ACALL DELAY;0.1m= 6s delay between blinks
+POP ACC
+SJMP BLINK
+DELAY: MOV R5, #200
+DEL1: MOV R4,#100
+DEL2: MOV R3, #150
+DEL3: DJNZ R3, DEL3;DJNS instructions take around 2us
+DJNZ R4, DEL2; and there are in total 200*100*150=3*10^6 DJNS instructions
+DJNZ R5, DEL1; so this delay process takes 2*3*10^6=6*10^6 us= 6 second = 0.1 minute
+
+RET
+
+ORG 1000h
+ARRAY: DB 3Fh,06h,5Bh,4Fh,66h,6Dh,7Dh,07h,7Fh,6Fh
+END
